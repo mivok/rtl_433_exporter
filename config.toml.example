@@ -1,0 +1,8 @@
+# Friendly descriptions for metrics in addition to the default list
+[metric_descriptions]
+some_metric = "Some Metric in some unit"
+
+# Mapping of devices to locations, i.e. list of friendly names for devices
+# "Model,ID,Channel" = "Location"
+[locations]
+"Acurite-Rain899,1234,0" = "Outside"
