@@ -100,7 +100,8 @@ def process_lines(fd):
         # we will use as labels
         metadata_keys = {'time', 'model', 'id', 'channel', 'mic'}
         metadata = {i: data.get(i, '') for i in metadata_keys}
-        data = {i: data[i] for i in data if i not in metadata_keys}
+        data = {i: data[i] for i in data if i not in metadata_keys
+                and isinstance(data[i], (int, float))}
 
         # Set the location based on device mappings
         metadata['location'] = config['locations'].get(
