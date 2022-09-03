@@ -1,30 +1,36 @@
 #!/usr/bin/env python3
 import collections
 import contextlib
+import logging
 import json
+import os
 import subprocess
+import sys
 
 import prometheus_client
 import toml
 
-# This is the same port as the golang rtl_433_prometheus exporter. It works for
-# now, but we might want to change it later.
-PROMETHEUS_PORT = 9550
 
-# Friendly descriptions of metric names included in the output. If a metric
-# isn't included here, then its name is used instead
-metric_descriptions = {
-    "battery_ok": "Battery status (1 ok, 0 low)",
-    "rain_mm": "Total rain level in mm",
-    "temperature_celsius": "Temperature in C",
-    "humidity": "Relative Humidity (0.0-1.0)",
-    "timestamp_seconds": "Timestamp when we last received a packet",
-    "packets_received": "Number of packets received from a device",
+config = {
+    # This is the same port as the golang rtl_433_prometheus exporter. It
+    # works for now, but we might want to change it later.
+    "prometheus_port": 9550,
+
+    # Friendly descriptions of metric names included in the output. If a
+    # metric isn't included here, then its name is used instead
+    "metric_descriptions": {
+        "battery_ok": "Battery status (1 ok, 0 low)",
+        "rain_mm": "Total rain level in mm",
+        "temperature_celsius": "Temperature in C",
+        "humidity": "Relative Humidity (0.0-1.0)",
+        "timestamp_seconds": "Timestamp when we last received a packet",
+        "packets_received": "Number of packets received from a device",
+    },
+
+    # Mapping of device information to a location. This is populated from the
+    # config file.
+    "locations": {},
 }
-
-# Mapping of device information to a location. This is populated from the
-# config file.
-locations = {}
 
 # List of keys that are used as labels for a metric
 label_keys = ['model', 'id', 'channel', 'location']
@@ -37,7 +43,7 @@ class Metrics(collections.defaultdict):
     def __missing__(self, key):
         self[key] = prometheus_client.Gauge(
             "rtl_433_" + key,
-            metric_descriptions.get(key, key),
+            config['metric_descriptions'].get(key, key),
             label_keys)
         return self[key]
 
@@ -54,14 +60,22 @@ def remove_default_metrics():
             prometheus_client.REGISTRY.unregister(name)
 
 
-def load_config():
-    config = toml.load("config.toml")
+def load_config(filename):
+    if not os.path.exists(filename):
+        logging.warn(f"Config file {filename} doesn't exist. Skipping...")
+        return
+    logging.info(f"Loading config from {filename}")
 
-    if 'metric_descriptions' in config:
-        metric_descriptions.update(config['metric_descriptions'])
+    loaded_config = toml.load(filename)
 
-    if 'locations' in config:
-        locations.update(config['locations'])
+    # Merge loaded and default config
+    # Dict values are merged, other values are replaced
+    for key in config:
+        if key in loaded_config:
+            if isinstance(config[key], dict):
+                config[key].update(loaded_config[key])
+            else:
+                config[key] = loaded_config[key]
 
 
 def start_rtl433():
@@ -81,7 +95,7 @@ def process_lines(fd):
         data = {i: data[i] for i in data if i not in metadata_keys}
 
         # Set the location based on device mappings
-        metadata['location'] = locations.get(
+        metadata['location'] = config['locations'].get(
             f"{metadata['model']},{metadata['id']},{metadata['channel']}",
             "")
 
@@ -104,8 +118,15 @@ def process_lines(fd):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     remove_default_metrics()
-    load_config()
-    prometheus_client.start_http_server(PROMETHEUS_PORT)
+    if len(sys.argv) > 1:
+        load_config(sys.argv[1])
+    else:
+        load_config("./config.toml")
+    logging.info(f"Starting http server on {config['prometheus_port']}")
+    prometheus_client.start_http_server(config['prometheus_port'])
+    logging.info("Starting rtl_433 process")
     fd = start_rtl433()
+    logging.info("Procesing metrics")
     process_lines(fd)

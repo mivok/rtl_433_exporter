@@ -1,0 +1,12 @@
+[Unit]
+Description=RTL 433 Prometheus Exporter
+After=network.target
+
+[Service]
+Restart=always
+RestartSec=15s
+ExecStart=/usr/local/bin/rtl_433_exporter.py \
+    /usr/local/etc/rtl_433_exporter_config.toml
+
+[Install]
+WantedBy=multi-user.target
