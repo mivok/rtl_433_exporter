@@ -20,9 +20,16 @@ config = {
     # metric isn't included here, then its name is used instead
     "metric_descriptions": {
         "battery_ok": "Battery status (1 ok, 0 low)",
-        "rain_mm": "Total rain level in mm",
-        "temperature_celsius": "Temperature in C",
+        "battery_V": "Battery voltage",
+        "temperature_C": "Temperature in C",
         "humidity": "Relative Humidity (0.0-1.0)",
+        "moisture": "Moisture Level (0.0-1.0)",
+        "wind_dir_deg": "Wind direction in degrees",
+        "wind_avg_m_s": "Average wind speed in m/s",
+        "wind_max_m_s": "Gust wind speed in m/s",
+        "rain_mm": "Total rainfall in mm since last reset",
+        "rain_rate_mm_h": "Rainfall rate in mm per hour",
+        "pressure_hPa": "Air or Tire pressure in hPa",
         "timestamp_seconds": "Timestamp when we last received a packet",
         "packets_received": "Number of packets received from a device",
     },
