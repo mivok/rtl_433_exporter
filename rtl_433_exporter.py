@@ -94,11 +94,12 @@ def start_rtl433():
 
 def process_lines(fd):
     for line in fd:
+        logging.debug(line)
         data = json.loads(line)
         # Split data into things we want to keep as metrics and metadata that
         # we will use as labels
         metadata_keys = {'time', 'model', 'id', 'channel', 'mic'}
-        metadata = {i: data[i] for i in metadata_keys if i in data}
+        metadata = {i: data.get(i, '') for i in metadata_keys}
         data = {i: data[i] for i in data if i not in metadata_keys}
 
         # Set the location based on device mappings
@@ -125,7 +126,10 @@ def process_lines(fd):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    level = logging.INFO
+    if os.environ.get('DEBUG') == "1":
+        level = logging.DEBUG
+    logging.basicConfig(level=level)
     remove_default_metrics()
     if len(sys.argv) > 1:
         load_config(sys.argv[1])
