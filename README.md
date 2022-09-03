@@ -4,12 +4,14 @@
 
 * Install rtl_433 somewhere in the path
 * Ensure python3 is installed
-* Copy rtl_433_exporter.py to /usr/local/bin
-* Create a config file in /usr/local/etc/rtl_433_exporter_config.toml
-* Copy rtl_433_exporter.service to /etc/systemd/system
-* Run systemctl daemon-reload
-* Run systemctl enable rtl_433_exporter.service
-* Run systemctl start rtl_433_exporter.service
+* Clone this repo
+* Run `pip install -r requirements.txt`
+* Copy `rtl_433_exporter.py` to `/usr/local/bin`
+* Create a config file in `/usr/local/etc/rtl_433_exporter_config.toml`
+* Copy `rtl_433_exporter.service` to `/etc/systemd/system`
+* Run `systemctl daemon-reload`
+* Run `systemctl enable rtl_433_exporter.service`
+* Run `systemctl start rtl_433_exporter.service`
 
 ## Config
 
